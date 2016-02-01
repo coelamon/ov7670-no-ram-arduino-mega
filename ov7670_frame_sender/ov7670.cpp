@@ -7,17 +7,17 @@
 #include "ov7670.h"
 static const struct regval_list vga_ov7670[] PROGMEM = {
 	{REG_HREF,0xF6},	// was B6  
-	{0x17,0x13},		// HSTART
-	{0x18,0x01},		// HSTOP
-	{0x19,0x02},		// VSTART
-	{0x1a,0x7a},		// VSTOP
-	{REG_VREF,0x0a},	// VREF
+	{REG_HSTART,0x13},
+	{REG_HSTOP,0x01},
+	{REG_VSTART,0x02},
+	{REG_VSTOP,0x7a},
+	{REG_VREF,0x0a},
 	{0xff, 0xff},		/* END MARKER */
 };
 static const struct regval_list qvga_ov7670[] PROGMEM = {
 	{REG_COM14, 0x19},
-	{0x72, 0x11},
-	{0x73, 0xf1},
+	{REG_SCALING_DCWCTR, 0x11},
+	{REG_SCALING_PCLK_DIV, 0xf1},
 	{REG_HSTART,0x16},
 	{REG_HSTOP,0x04},
 	{REG_HREF,0x24},
@@ -27,9 +27,9 @@ static const struct regval_list qvga_ov7670[] PROGMEM = {
 	{0xff, 0xff},	/* END MARKER */
 };
 static const struct regval_list qqvga_ov7670[] PROGMEM = {
-	{REG_COM14, 0x1a},	// divide by 4
-	{0x72, 0x22},		// downsample by 4
-	{0x73, 0xf2},		// divide by 4
+	{REG_COM14, 0x1a},		// divide by 4
+	{REG_SCALING_DCWCTR, 0x22},	// downsample by 4
+	{REG_SCALING_PCLK_DIV, 0xf2},	// divide by 4
 	{REG_HSTART,0x16},
 	{REG_HSTOP,0x04},
 	{REG_HREF,0xa4},		   
@@ -44,12 +44,12 @@ static const struct regval_list yuv422_ov7670[] PROGMEM = {
 	{REG_COM1, 0},
 	{REG_COM15, COM15_R00FF},
 	{REG_COM9, 0x6A},	/* 128x gain ceiling; 0x8 is reserved bit */
-	{0x4f, 0x80},		/* "matrix coefficient 1" */
-	{0x50, 0x80},		/* "matrix coefficient 2" */
-	{0x51, 0},		/* vb */
-	{0x52, 0x22},		/* "matrix coefficient 4" */
-	{0x53, 0x5e},		/* "matrix coefficient 5" */
-	{0x54, 0x80},		/* "matrix coefficient 6" */
+	{REG_CMATRIX_1, 0x80},		/* "matrix coefficient 1" */
+	{REG_CMATRIX_2, 0x80},		/* "matrix coefficient 2" */
+	{REG_CMATRIX_3, 0},		/* vb */
+	{REG_CMATRIX_4, 0x22},		/* "matrix coefficient 4" */
+	{REG_CMATRIX_5, 0x5e},		/* "matrix coefficient 5" */
+	{REG_CMATRIX_6, 0x80},		/* "matrix coefficient 6" */
 	{REG_COM13,/*COM13_GAMMA|*/COM13_UVSAT},
 	{0xff, 0xff},		/* END MARKER */
 };
@@ -59,12 +59,12 @@ static const struct regval_list rgb565_ov7670[] PROGMEM = {
 	{REG_COM1, 0x0},
 	{REG_COM15, COM15_RGB565|COM15_R00FF},
 	{REG_COM9, 0x6A},	 /* 128x gain ceiling; 0x8 is reserved bit */
-	{0x4f, 0xb3},		 /* "matrix coefficient 1" */
-	{0x50, 0xb3},		 /* "matrix coefficient 2" */
-	{0x51, 0},		 /* vb */
-	{0x52, 0x3d},		 /* "matrix coefficient 4" */
-	{0x53, 0xa7},		 /* "matrix coefficient 5" */
-	{0x54, 0xe4},		 /* "matrix coefficient 6" */
+	{REG_CMATRIX_1, 0xb3},		 /* "matrix coefficient 1" */
+	{REG_CMATRIX_2, 0xb3},		 /* "matrix coefficient 2" */
+	{REG_CMATRIX_3, 0},		 /* vb */
+	{REG_CMATRIX_4, 0x3d},		 /* "matrix coefficient 4" */
+	{REG_CMATRIX_5, 0xa7},		 /* "matrix coefficient 5" */
+	{REG_CMATRIX_6, 0xe4},		 /* "matrix coefficient 6" */
 	{REG_COM13, /*COM13_GAMMA|*/COM13_UVSAT},
 	{0xff, 0xff},	/* END MARKER */
 };
@@ -89,9 +89,10 @@ static const struct regval_list ov7670_default_regs[] PROGMEM = {//from the linu
 
 	{REG_COM3, 0},	{REG_COM14, 0},
 	/* Mystery scaling numbers */
-	{0x70, 0x3a},		{0x71, 0x35},
-	{0x72, 0x11},		{0x73, 0xf0},
-	{0xa2,/* 0x02 changed to 1*/1},{REG_COM10, COM10_VS_NEG},
+	{REG_SCALING_XSC, 0x3a},	{REG_SCALING_YSC, 0x35},
+	{REG_SCALING_DCWCTR, 0x11},	{REG_SCALING_PCLK_DIV, 0xf0},
+	{REG_SCALING_PCLK_DELAY,/* 0x02 changed to 1*/1},
+	{REG_COM10, COM10_VS_NEG},
 	/* Gamma curve values */
 	{0x7a, 0x20},		{0x7b, 0x10},
 	{0x7c, 0x1e},		{0x7d, 0x35},
@@ -125,7 +126,7 @@ static const struct regval_list ov7670_default_regs[] PROGMEM = {//from the linu
 	{0x38, 0x71},		{0x39, 0x2a},
 	{REG_COM12, 0x78},	{0x4d, 0x40},
 	{0x4e, 0x20},		{REG_GFIX, 0},
-	/*{0x6b, 0x4a},*/		{0x74,0x10},
+	/*{0x6b, 0x4a},*/	{0x74,0x10},
 	{0x8d, 0x4f},		{0x8e, 0},
 	{0x8f, 0},		{0x90, 0},
 	{0x91, 0},		{0x96, 0},
@@ -147,10 +148,10 @@ static const struct regval_list ov7670_default_regs[] PROGMEM = {//from the linu
 	{REG_COM8, COM8_FASTAEC|COM8_AECSTEP|COM8_AGC|COM8_AEC|COM8_AWB},
 
 	/* Matrix coefficients */
-	{0x4f, 0x80},		{0x50, 0x80},
-	{0x51, 0},		{0x52, 0x22},
-	{0x53, 0x5e},		{0x54, 0x80},
-	{0x58, 0x9e},
+	{REG_CMATRIX_1, 0x80},	{REG_CMATRIX_2, 0x80},
+	{REG_CMATRIX_3, 0},	{REG_CMATRIX_4, 0x22},
+	{REG_CMATRIX_5, 0x5e},	{REG_CMATRIX_6, 0x80},
+	{REG_CMATRIX_SIGN, 0x9e},
 
 	{REG_COM16, COM16_AWBGAIN},	{REG_EDGE, 0},
 	{0x75, 0x05},		{REG_REG76, 0xe1},

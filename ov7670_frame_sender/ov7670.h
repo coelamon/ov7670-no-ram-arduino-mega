@@ -117,12 +117,23 @@ void camInit(void);
  * They are nine-bit signed quantities, with the sign bit
  * stored in0x58.Sign for v-red is bit 0, and up from there.
  */
-#define	REG_CMATRIX_BASE0x4f
-#define CMATRIX_LEN 6
-#define REG_CMATRIX_SIGN0x58
-#define REG_BRIGHT	0x55	/* Brightness */
-#define REG_CONTRAS	0x56	/* Contrast control */
-#define REG_GFIX	0x69	/* Fix gain control */
+#define REG_CMATRIX_BASE	0x4f
+#define REG_CMATRIX_1		0x4f
+#define REG_CMATRIX_2		0x50
+#define REG_CMATRIX_3		0x51
+#define REG_CMATRIX_4		0x52
+#define REG_CMATRIX_5		0x53
+#define REG_CMATRIX_6		0x54
+#define CMATRIX_LEN		6
+#define REG_CMATRIX_SIGN	0x58
+#define REG_BRIGHT		0x55	/* Brightness */
+#define REG_CONTRAS		0x56	/* Contrast control */
+#define REG_GFIX		0x69	/* Fix gain control */
+#define REG_SCALING_XSC		0x70
+#define REG_SCALING_YSC		0x71
+#define REG_SCALING_DCWCTR	0x72	/* DCW Control */
+#define REG_SCALING_PCLK_DIV	0x73
+#define REG_SCALING_PCLK_DELAY	0xA2
 #define REG_REG76	0x76	/* OV's name */
 #define R76_BLKPCOR	0x80	/* Black pixel correction enable */
 #define R76_WHTPCOR	0x40	/* White pixel correction enable */
