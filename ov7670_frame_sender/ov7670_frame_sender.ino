@@ -16,11 +16,13 @@
 #define useQqvga
 
 static inline void serialWrB(uint8_t dat){
-	while(!( UCSR0A & (1<<UDRE0)));//wait for byte to transmit
+	while(!( UCSR0A & (1<<UDRE0))); // wait for byte to transmit
 	UDR0=dat;
-	while(!( UCSR0A & (1<<UDRE0)));//wait for byte to transmit
+	while(!( UCSR0A & (1<<UDRE0))); // wait for byte to transmit
 }
 static void StringPgm(const char * str){
+	if (!pgm_read_byte_near(str))
+		return;
 	do{
 		serialWrB(pgm_read_byte_near(str));
 	}while(pgm_read_byte_near(++str));
@@ -33,16 +35,16 @@ static void captureImg(uint16_t wg,uint16_t hg){
 	uint8_t buf[320];
 #endif
 	StringPgm(PSTR("RDY"));
-	//Wait for vsync it is on pin 3 (counting from 0) portD
-	while(!(PIND&8));//wait for high
-	while((PIND&8));//wait for low
+	// wait for vsync
+	while(!(PINA&_BV(4))); // wait for high
+	while((PINA&_BV(4)));  // wait for low
 #ifdef useVga
 	while(hg--){
 		lg2=wg;
 		while(lg2--){
-			while((PIND&4));//wait for low
-			UDR0=(PINC&15)|(PIND&240);
-			while(!(PIND&4));//wait for high
+			while((PINA&_BV(6)));//wait for low
+			UDR0=PINC;
+			while(!(PINA&_BV(6)));//wait for high
 		}
 	}
 #elif defined(useQvga)
@@ -51,13 +53,13 @@ static void captureImg(uint16_t wg,uint16_t hg){
 		uint8_t*b=buf,*b2=buf;
 		lg2=wg/2;
 		while(lg2--){
-			while((PIND&4));//wait for low
-			*b++=(PINC&15)|(PIND&240);
-			while(!(PIND&4));//wait for high
-			while((PIND&4));//wait for low
-			*b++=(PINC&15)|(PIND&240);
+			while((PINA&_BV(6)));//wait for low
+			*b++=PINC;
+			while(!(PINA&_BV(6)));//wait for high
+			while((PINA&_BV(6)));//wait for low
+			*b++=PINC;
 			UDR0=*b2++;
-			while(!(PIND&4));//wait for high
+			while(!(PINA&_BV(6)));//wait for high
 		}
 		/* Finish sending the remainder during blanking */
 		lg2=wg/2;
@@ -73,22 +75,22 @@ static void captureImg(uint16_t wg,uint16_t hg){
 		uint8_t*b=buf,*b2=buf;
 		lg2=wg/5;
 		while(lg2--){
-			while((PIND&4));//wait for low
-			*b++=(PINC&15)|(PIND&240);
-			while(!(PIND&4));//wait for high
-			while((PIND&4));//wait for low
-			*b++=(PINC&15)|(PIND&240);
-			while(!(PIND&4));//wait for high
-			while((PIND&4));//wait for low
-			*b++=(PINC&15)|(PIND&240);
-			while(!(PIND&4));//wait for high
-			while((PIND&4));//wait for low
-			*b++=(PINC&15)|(PIND&240);
-			while(!(PIND&4));//wait for high
-			while((PIND&4));//wait for low
-			*b++=(PINC&15)|(PIND&240);
+			while((PINA&_BV(6)));//wait for low
+			*b++=PINC;
+			while(!(PINA&_BV(6)));//wait for high
+			while((PINA&_BV(6)));//wait for low
+			*b++=PINC;
+			while(!(PINA&_BV(6)));//wait for high
+			while((PINA&_BV(6)));//wait for low
+			*b++=PINC;
+			while(!(PINA&_BV(6)));//wait for high
+			while((PINA&_BV(6)));//wait for low
+			*b++=PINC;
+			while(!(PINA&_BV(6)));//wait for high
+			while((PINA&_BV(6)));//wait for low
+			*b++=PINC;
 			UDR0=*b2++;
-			while(!(PIND&4));//wait for high
+			while(!(PINA&_BV(6)));//wait for high
 		}
 		/* Finish sending the remainder during blanking */
 		lg2=320-(wg/5);
@@ -102,38 +104,41 @@ static void captureImg(uint16_t wg,uint16_t hg){
 }
 int main(void){
 	cli();//disable interrupts
-	/* Setup the 8mhz PWM clock 
-	 * This will be on pin 11*/
-	DDRB|=(1<<3);//pin 11
-	ASSR &= ~(_BV(EXCLK) | _BV(AS2));
-	TCCR2A=(1<<COM2A0)|(1<<WGM21)|(1<<WGM20);
-	TCCR2B=(1<<WGM22)|(1<<CS20);
-	OCR2A=0;//(F_CPU)/(2*(X+1))
-	DDRC&=~15;//low d0-d3 camera
-	DDRD&=~252;//d7-d4 and interrupt pins
+	// Setup the 8mhz PWM clock
+	// OV7670 XCLK => (through level shift!) => pin 46 = PL3(OC5A), output
+	DDRL |= _BV(3);
+	TCCR5A = _BV(COM5A0) | _BV(WGM51) | _BV(WGM50);
+	TCCR5B = _BV(WGM53) | _BV(WGM52) | _BV(CS50);
+	OCR5A = 0; // (F_CPU)/(2*(X+1))
+	// OV7670 VSYNC => pin 26 = PA4, input
+	DDRA &= ~ _BV(4);
+	// OV7670 PCLK => pin 28 = PA6, input
+	DDRA &= ~ _BV(6);
+	// OV7670 D7-D0 => pin 30-37 = PC7-PC0, input
+	DDRC = 0;
 	_delay_ms(3000);
-	//set up twi for 100khz
-	TWSR&=~3;//disable prescaler for TWI
-	TWBR=72;//set to 100khz
-	//enable serial
+	// set up twi for 100khz
+	TWSR&=~3; // disable prescaler for TWI
+	TWBR=72;  // set to 100khz
+	// enable serial
 	UBRR0H=0;
-	UBRR0L=1;//0 = 2M baud rate. 1 = 1M baud. 3 = 0.5M. 7 = 250k 207 is 9600 baud rate.
-	UCSR0A|=2;//double speed aysnc
-	UCSR0B = (1<<RXEN0)|(1<<TXEN0);//Enable receiver and transmitter
-	UCSR0C=6;//async 1 stop bit 8bit char no parity bits
+	UBRR0L=3;  // 0 = 2M baud rate. 1 = 1M baud. 3 = 0.5M. 7 = 250k 207 is 9600 baud rate.
+	UCSR0A|=2; // double speed aysnc
+	UCSR0B = (1<<RXEN0)|(1<<TXEN0); // enable receiver and transmitter
+	UCSR0C=6; // async USART, 1 stop bit, 8-bit character size, no parity bits
 	camInit();
 #ifdef useVga
-	setRes(VGA);
+	setResolution(VGA);
 	setColorSpace(BAYER_RGB);
-	wrReg(0x11,25);
+	wrReg(0x11,63);
 #elif defined(useQvga)
-	setRes(QVGA);
+	setResolution(QVGA);
 	setColorSpace(YUV422);
-	wrReg(0x11,12);
+	wrReg(0x11,31);
 #else
-	setRes(QQVGA);
+	setResolution(QQVGA);
 	setColorSpace(YUV422);
-	wrReg(0x11,3);
+	wrReg(0x11,4);
 #endif
 	/* If you are not sure what value to use here for the divider (register 0x11)
 	 * Values I have found to work raw vga 25 qqvga yuv422 12 qvga yuv422 21

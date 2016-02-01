@@ -9,7 +9,7 @@ struct regval_list{
 	uint8_t value;
 };
 void setColorSpace(enum COLORSPACE color);
-void setRes(enum RESOLUTION res);
+void setResolution(enum RESOLUTION res);
 void camInit(void);
 #define OV7670_I2C_ADDRESS	0x21
 /* Registers */
