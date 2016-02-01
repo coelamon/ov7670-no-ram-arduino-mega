@@ -20,7 +20,7 @@ static const struct regval_list qvga_ov7670[] PROGMEM = {
 	{REG_SCALING_PCLK_DIV, 0xf1},
 	{REG_HSTART,0x16},
 	{REG_HSTOP,0x04},
-	{REG_HREF,0x24},
+	{REG_HREF,0xA4}, // was 24
 	{REG_VSTART,0x02},
 	{REG_VSTOP,0x7a},
 	{REG_VREF,0x0a},
