@@ -23,3 +23,8 @@ GND  -> PWDN
 3.3v -> RESET
 GND  -> GND
 3.3v -> 3V3
+
+warning:
+don't connect SIOC, SIOD, XCLK directly to arduino mega
+consequences will be unpredictable.
+Arduino Mega 2560 board has 20, 21 pins pulled-up to 5V! (see scematics)
