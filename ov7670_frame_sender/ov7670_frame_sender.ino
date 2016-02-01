@@ -1,17 +1,19 @@
-#define F_CPU 16000000UL
-#include <stdint.h>
-#include <avr/io.h>
-#include <avr/interrupt.h>
-#include <util/twi.h>
-#include <util/delay.h>
-#include <avr/pgmspace.h>
+/* code taken from ComputerNerd/ov7670-no-ram-arduino-uno
+ * and changed a little
+ *
+ * OV7670 NO FIFO
+ * Arduino Mega 2560
+ * 
+ */
+
 #include "ov7670.h"
+
 /* Configuration: this lets you easily change between different resolutions
  * You must only uncomment one
  * no more no less*/
-#define useVga
+//#define useVga
 //#define useQvga
-//#define useQqvga
+#define useQqvga
 
 static inline void serialWrB(uint8_t dat){
 	while(!( UCSR0A & (1<<UDRE0)));//wait for byte to transmit
