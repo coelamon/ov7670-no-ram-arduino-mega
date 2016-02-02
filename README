@@ -28,3 +28,17 @@ warning:
 don't connect SIOC, SIOD, XCLK directly to arduino mega
 consequences will be unpredictable.
 Arduino Mega 2560 board has 20, 21 pins pulled-up to 5V! (see scematics)
+
+ran few tests:
+
+1.
+usart baud rate: 0.5M
+resolution: 160x120 (QQVGA)
+color space: YUV422
+result: about 1 frame per second
+
+2.
+usart baud rate: 0.5M
+resolution: 320x240 (QVGA)
+color space: YUV422
+result: about 1 frame per 4 seconds

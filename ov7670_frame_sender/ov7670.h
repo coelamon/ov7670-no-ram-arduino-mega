@@ -35,7 +35,7 @@ void camInit(void);
 #define REG_COM5	0x0e	/* All "reserved" */
 #define REG_COM6	0x0f	/* Control 6 */
 #define REG_AECH	0x10	/* More bits of AEC value */
-#define REG_CLKRC	0x11	/* Clocl control */
+#define REG_CLKRC	0x11	/* Clock control */
 #define CLK_EXT		0x40	/* Use external clock directly */
 #define CLK_SCALE	0x3f	/* Mask for internal clock scale */
 #define REG_COM7	0x12	/* Control 7 */
